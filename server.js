@@ -6,6 +6,14 @@ const fs = require('fs');
 
 // serce static files from the assets directory
 
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
+
+app.use(express.static(path.join(__dirname, 'assets')));
+
 app.get('/api/getAsset/:fileName', (req, res) => {
   const fileName = req.params.fileName;
   const filePath = path.join(__dirname, 'assets/', fileName, fileName + '.glb');

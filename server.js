@@ -5,7 +5,19 @@ const app = express();
 const fs = require('fs');
 
 // serce static files from the assets directory
-app.use('/assets', express.static(path.join(__dirname, 'assets')))
+
+app.get('/api/getAsset/:fileName', (req, res) => {
+  const fileName = req.params.fileName;
+  const filePath = path.join(__dirname, 'assets/', fileName, fileName + '.glb');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  }
+  else {
+    res.status(404).send('File not found');
+  }
+}
+);
+
 
 const getFiles = (directoryPath) => {
   try {
@@ -21,7 +33,7 @@ const assetsDirectoryPath = path.join(__dirname, 'assets');
 const files = getFiles(assetsDirectoryPath);
 
 // GET /getFiles to get the list of files in the assets directory
-app.get('/getFiles', (req, res) => {
+app.get('/api/getFiles', (req, res) => {
   const filesWithId = files.map((file, index) => {
     return {
       id: index + 1,
@@ -35,7 +47,7 @@ app.get('/getFiles', (req, res) => {
 const upload = multer({ dest: path.join(__dirname, 'assets') });
 
 // POST /uploadFile to upload a file to the assets directory with the name of the file as the directory name
-app.post('/uploadFile', upload.single('file'), async (req, res) => {
+app.post('/api/uploadFile', upload.single('file'), async (req, res) => {
   const file = req.file;
   const fileName = path.parse(file.originalname).name;
 

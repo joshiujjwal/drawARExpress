@@ -131,6 +131,6 @@ app.post('/api/uploadFile', upload.single('file'), async (req, res) => {
 //   console.log('HTTPS Server is running on port 3000');
 // });
 
-// app.listen(3000, () => {
-//   console.log('Server is running on port 3000');
-// });
+app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});

@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const app = express();
 const fs = require('fs');
+const { exec } = require('child_process');
 
 // serce static files from the assets directory
 
@@ -11,6 +12,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   next();
 });
+
 
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb'}));
@@ -29,7 +31,6 @@ app.get('/api/getAsset/:fileName', (req, res) => {
 }
 );
 
-
 const getFiles = (directoryPath) => {
   try {
     const files = fs.readdirSync(directoryPath);
@@ -40,15 +41,35 @@ const getFiles = (directoryPath) => {
   }
 };
 
-const assetsDirectoryPath = path.join(__dirname, 'assets');
-const files = getFiles(assetsDirectoryPath);
+const convertToJpg = async (filePath) => {
+  const input = filePath;
+  const output = filePath.replace('.glb', '.jpg');
+  const command = `npx screenshot-glb -i ${input} -o ${output} -h 100 -w 100&`;
+  
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing command: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Command stderr: ${stderr}`);
+      return;
+    }
+    console.log(`Command stdout: ${stdout}`);
+  });
+};
 
 // GET /getFiles to get the list of files in the assets directory
 app.get('/api/getFiles', (req, res) => {
+  const assetsDirectoryPath = path.join(__dirname, 'assets');
+  const files = getFiles(assetsDirectoryPath);
+
   const filesWithId = files.map((file, index) => {
     return {
       id: index + 1,
-      name: file
+      name: file,
+      lastModified: fs.statSync(path.join(assetsDirectoryPath, file)).mtime,
+      img: `${file}/${file}.jpg`
     };
   });
   res.status(200).send({ data: filesWithId });
@@ -85,6 +106,8 @@ app.post('/api/uploadFile', upload.single('file'), async (req, res) => {
 
   const filePath = path.join(directoryPath, file.originalname);
 
+  
+
   // Move the file to the directory with the name of the file and the original name of the file
   // If the file already exists, it will be replaced
   fs.rename(file.path, filePath, async (err) => {
@@ -101,7 +124,11 @@ app.post('/api/uploadFile', upload.single('file'), async (req, res) => {
         return res.status(500).send('Error removing file');
       }
     }
-    res.status(200).send('File uploaded successfully');
+
+    const covertToJpg = await convertToJpg(filePath).then(() => {
+      res.status(200).send('File uploaded successfully');
+    }
+    );
   });
 
 });

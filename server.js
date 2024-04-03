@@ -1,21 +1,16 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const app = express();
 const fs = require('fs');
 const { exec } = require('child_process');
+const https = require('https');
 
-// serce static files from the assets directory
+// const options = {
+//   key: fs.readFileSync('./cert/key.pem'),
+//   cert: fs.readFileSync('./cert/cert.pem'),
+// };
 
-
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  next();
-});
-
-
-app.use(express.json({limit: '50mb'}));
-app.use(express.urlencoded({limit: '50mb'}));
+const app = express();
 
 app.use(express.static(path.join(__dirname, 'assets')));
 
@@ -132,6 +127,10 @@ app.post('/api/uploadFile', upload.single('file'), async (req, res) => {
   });
 
 });
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
+// https.createServer(options, app).listen(3000, () => {
+//   console.log('HTTPS Server is running on port 3000');
+// });
+
+// app.listen(3000, () => {
+//   console.log('Server is running on port 3000');
+// });
